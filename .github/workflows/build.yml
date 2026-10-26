@@ -1,0 +1,51 @@
+name: Build plugin
+
+on:
+  push:
+    branches: [ jellyfin-12.3 ]
+    tags: [ 'v*' ]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      jellyfin_version:
+        description: 'Jellyfin NuGet version to build against'
+        required: false
+        default: '12.3.0'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      JELLYFIN_VERSION: ${{ github.event.inputs.jellyfin_version || '12.3.0' }}
+      PROJECT: src/Jellyfin.Plugin.PluginPages/Jellyfin.Plugin.PluginPages.csproj
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Build
+        run: dotnet publish "$PROJECT" -c Release -p:JellyfinVersion=$JELLYFIN_VERSION -o out
+
+      - name: Package
+        run: |
+          mkdir -p dist/PluginPages
+          cp out/Jellyfin.Plugin.PluginPages.dll dist/PluginPages/
+          cp out/Newtonsoft.Json.dll dist/PluginPages/ 2>/dev/null || true
+          cp src/logo.png dist/PluginPages/ 2>/dev/null || true
+          cd dist && zip -r "../PluginPages-jf$JELLYFIN_VERSION.zip" PluginPages
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PluginPages-jf${{ env.JELLYFIN_VERSION }}
+          path: PluginPages-jf*.zip
+
+      - name: Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: PluginPages-jf*.zip
