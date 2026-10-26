@@ -36,6 +36,25 @@ jobs:
           mkdir -p dist/PluginPages
           cp out/Jellyfin.Plugin.PluginPages.dll dist/PluginPages/
           cp src/logo.png dist/PluginPages/ 2>/dev/null || true
+          VERSION=$(sed -n 's#.*<Version>\(.*\)</Version>.*#\1#p' "$PROJECT" | head -1)
+          cat > dist/PluginPages/meta.json <<EOF
+          {
+            "category": "General",
+            "changelog": "Built from ${GITHUB_SHA}",
+            "description": "User-facing plugin settings pages (fork built for Jellyfin 12.3)",
+            "guid": "5b6550fa-a014-4f4c-8a2c-59a43680ac6d",
+            "name": "Plugin Pages",
+            "overview": "Plugin Pages for Jellyfin $JELLYFIN_VERSION",
+            "owner": "ZoziLaMalice",
+            "targetAbi": "$JELLYFIN_VERSION.0",
+            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "version": "$VERSION",
+            "status": "Active",
+            "autoUpdate": false,
+            "imagePath": "",
+            "assemblies": ["Jellyfin.Plugin.PluginPages.dll"]
+          }
+          EOF
           cd dist && zip -r "../PluginPages-jf$JELLYFIN_VERSION.zip" PluginPages
 
       - uses: actions/upload-artifact@v4
