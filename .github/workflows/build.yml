@@ -35,7 +35,6 @@ jobs:
         run: |
           mkdir -p dist/PluginPages
           cp out/Jellyfin.Plugin.PluginPages.dll dist/PluginPages/
-          cp out/Newtonsoft.Json.dll dist/PluginPages/ 2>/dev/null || true
           cp src/logo.png dist/PluginPages/ 2>/dev/null || true
           cd dist && zip -r "../PluginPages-jf$JELLYFIN_VERSION.zip" PluginPages
 
